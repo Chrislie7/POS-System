@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.get("/", (_req, res) => {
   res.json({
-    message: "POS Porto API aktif"
+    message: "POS Porto API aktif - no-total-v1"
   });
 });
 

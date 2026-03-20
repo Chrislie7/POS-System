@@ -8,6 +8,8 @@ async function create({ nama_barang, harga, jumlah, tanggal }) {
   `;
 
   const values = [nama_barang, harga, jumlah, tanggal];
+  console.log("transaction.create query version=no-total-v1");
+  console.log(query.trim());
   const result = await pool.query(query, values);
 
   return result.rows[0];
