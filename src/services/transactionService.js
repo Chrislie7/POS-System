@@ -44,12 +44,7 @@ function validatePayload(payload) {
 
 async function createTransaction(payload) {
   const validPayload = validatePayload(payload);
-  const total = validPayload.harga * validPayload.jumlah;
-
-  return transactionModel.create({
-    ...validPayload,
-    total
-  });
+  return transactionModel.create(validPayload);
 }
 
 async function getAllTransactions() {

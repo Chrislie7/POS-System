@@ -134,7 +134,7 @@ Dengan alur ini, data yang tampil di frontend selalu mengikuti data terbaru yang
 
 ## Schema Tabel
 
-Jalankan isi file `sql/schema.sql` di database PostgreSQL:
+Gunakan schema ini di PostgreSQL atau Supabase agar kolom `total` dihitung otomatis oleh database:
 
 ```sql
 CREATE TABLE IF NOT EXISTS transaksi (
@@ -142,10 +142,15 @@ CREATE TABLE IF NOT EXISTS transaksi (
   nama_barang VARCHAR(255) NOT NULL,
   harga NUMERIC(12, 2) NOT NULL CHECK (harga > 0),
   jumlah INTEGER NOT NULL CHECK (jumlah > 0),
-  total NUMERIC(12, 2) NOT NULL CHECK (total > 0),
+  total NUMERIC(14, 2) GENERATED ALWAYS AS (harga * jumlah) STORED,
   tanggal TIMESTAMP NOT NULL
 );
 ```
+
+Jika tabel `transaksi` sudah terlanjur dibuat dengan struktur berbeda, cara paling mudah di Supabase adalah:
+1. Backup data jika perlu.
+2. Drop tabel lama.
+3. Jalankan schema terbaru di atas.
 
 ## API Endpoint
 
@@ -164,7 +169,7 @@ Request body:
 }
 ```
 
-Catatan: field `total` akan dihitung otomatis oleh backend.
+Catatan: field `total` tidak dikirim dari frontend. Nilai `total` dihitung otomatis oleh database.
 
 ### 2. Ambil semua transaksi
 

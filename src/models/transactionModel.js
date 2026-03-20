@@ -1,13 +1,13 @@
 const pool = require("../config/db");
 
-async function create({ nama_barang, harga, jumlah, total, tanggal }) {
+async function create({ nama_barang, harga, jumlah, tanggal }) {
   const query = `
-    INSERT INTO transaksi (nama_barang, harga, jumlah, total, tanggal)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO transaksi (nama_barang, harga, jumlah, tanggal)
+    VALUES ($1, $2, $3, $4)
     RETURNING id, nama_barang, harga, jumlah, total, tanggal
   `;
 
-  const values = [nama_barang, harga, jumlah, total, tanggal];
+  const values = [nama_barang, harga, jumlah, tanggal];
   const result = await pool.query(query, values);
 
   return result.rows[0];
