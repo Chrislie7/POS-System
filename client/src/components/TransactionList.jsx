@@ -1,9 +1,49 @@
-function TransactionList({ transactions, loading, onDelete, grandTotal }) {
+function TransactionList({ transactions, loading, onDelete, onPrint, summary }) {
+  const topProducts = summary?.topProducts || [];
+  const recentTransactions = summary?.recentTransactions || [];
+
   return (
-    <section className="panel">
-      <div className="panel-header">
-        <p className="panel-kicker">Riwayat</p>
-        <h2>List transaksi</h2>
+    <section className="panel wide-panel">
+      <div className="panel-header row-between">
+        <div>
+          <p className="panel-kicker">Riwayat</p>
+          <h2>List transaksi</h2>
+        </div>
+        <div className="mini-badge">{transactions.length} total transaksi</div>
+      </div>
+
+      <div className="insight-grid">
+        <div className="soft-card">
+          <h3>Produk terlaris</h3>
+          {topProducts.length === 0 ? (
+            <p className="empty-state compact-state">Belum ada produk terjual.</p>
+          ) : (
+            <div className="mini-list">
+              {topProducts.map((item) => (
+                <div key={item.nama_barang} className="mini-list-item">
+                  <span>{item.nama_barang}</span>
+                  <strong>Rp {formatCurrency(item.total_penjualan)}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="soft-card">
+          <h3>Transaksi terbaru</h3>
+          {recentTransactions.length === 0 ? (
+            <p className="empty-state compact-state">Belum ada transaksi terbaru.</p>
+          ) : (
+            <div className="mini-list">
+              {recentTransactions.map((item) => (
+                <div key={item.id} className="mini-list-item">
+                  <span>{item.nama_barang}</span>
+                  <strong>Rp {formatCurrency(item.total)}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? <p className="empty-state">Memuat transaksi...</p> : null}
@@ -34,9 +74,14 @@ function TransactionList({ transactions, loading, onDelete, grandTotal }) {
                   <td>Rp {formatCurrency(item.total)}</td>
                   <td>{formatDate(item.tanggal)}</td>
                   <td>
-                    <button className="ghost-button" type="button" onClick={() => onDelete(item.id)}>
-                      Hapus
-                    </button>
+                    <div className="table-actions">
+                      <button className="secondary-button small-button" type="button" onClick={() => onPrint(item)}>
+                        Print
+                      </button>
+                      <button className="ghost-button small-button" type="button" onClick={() => onDelete(item.id)}>
+                        Hapus
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -44,11 +89,6 @@ function TransactionList({ transactions, loading, onDelete, grandTotal }) {
           </table>
         </div>
       ) : null}
-
-      <div className="footer-total">
-        <span>Total keseluruhan</span>
-        <strong>Rp {formatCurrency(grandTotal)}</strong>
-      </div>
     </section>
   );
 }

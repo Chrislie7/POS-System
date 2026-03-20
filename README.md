@@ -1,26 +1,29 @@
 # POS Porto Backend + Frontend
 
-Backend Node.js menggunakan Express dan PostgreSQL untuk sistem POS sederhana, dilengkapi frontend React yang clean dan ringan.
+Aplikasi POS sederhana dengan backend Express + PostgreSQL dan frontend React. Fitur utamanya tetap ringan, tetapi sekarang sudah mencakup login admin sederhana, dashboard ringkasan penjualan, produk preset, export Excel, dan print struk.
 
-## Fitur Backend
+## Fitur
 
+- Login admin sederhana berbasis token
 - Tambah transaksi
 - Ambil semua transaksi
 - Hapus transaksi
-- Validasi input dasar
-- Error handling dasar untuk request dan database
+- Dashboard ringkasan penjualan
+- Produk preset dengan harga otomatis
+- Custom order di pilihan terakhir
+- Export transaksi ke Excel
+- Print struk per transaksi
+- Validasi input dasar dan error handling dasar
 
-## Fitur Frontend
+## Kredensial Admin Default
 
-- Input nama barang
-- Input harga
-- Input jumlah
-- Auto hitung total
-- Tambah transaksi ke list
-- Tampilkan list transaksi dari backend
-- Tampilkan total keseluruhan
-- Terhubung ke backend dengan `fetch`
-- Menggunakan environment variable untuk URL API
+Atur lewat environment variable backend:
+
+```env
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_TOKEN=pos-porto-admin-token
+```
 
 ## Struktur Folder
 
@@ -29,6 +32,9 @@ Backend Node.js menggunakan Express dan PostgreSQL untuk sistem POS sederhana, d
 |-- client
 |   |-- src
 |   |   |-- components
+|   |   |   |-- DashboardOverview.jsx
+|   |   |   |-- LoginPage.jsx
+|   |   |   |-- ProductPicker.jsx
 |   |   |   |-- SummaryCard.jsx
 |   |   |   |-- TransactionForm.jsx
 |   |   |   `-- TransactionList.jsx
@@ -42,17 +48,27 @@ Backend Node.js menggunakan Express dan PostgreSQL untuk sistem POS sederhana, d
 |   |-- package.json
 |   `-- vite.config.js
 |-- src
+|   |-- constants
+|   |   `-- products.js
 |   |-- config
 |   |   `-- db.js
 |   |-- controllers
+|   |   |-- authController.js
+|   |   |-- dashboardController.js
+|   |   |-- productController.js
 |   |   `-- transactionController.js
 |   |-- middlewares
+|   |   |-- authMiddleware.js
 |   |   `-- errorHandler.js
 |   |-- models
 |   |   `-- transactionModel.js
 |   |-- routes
+|   |   |-- authRoutes.js
+|   |   |-- dashboardRoutes.js
+|   |   |-- productRoutes.js
 |   |   `-- transactionRoutes.js
 |   `-- services
+|       |-- authService.js
 |       `-- transactionService.js
 |-- sql
 |   `-- schema.sql
@@ -74,34 +90,7 @@ npm install
 npm run dev
 ```
 
-atau
-
-```bash
-npm start
-```
-
-## Instalasi Frontend
-
-Masuk ke folder `client`, lalu install dependency:
-
-```bash
-cd client
-npm install
-```
-
-## Menjalankan Frontend
-
-Di folder `client`:
-
-```bash
-npm run dev
-```
-
-Secara default Vite akan berjalan di `http://localhost:5173`.
-
 ## Environment Variable Backend
-
-Salin `.env.example` menjadi `.env`, lalu isi sesuai database PostgreSQL kamu:
 
 ```env
 PORT=3000
@@ -111,26 +100,61 @@ DB_NAME=postgres
 DB_USER=postgres.xxxxxxxxxxxxxxxx
 DB_PASSWORD=your_database_password
 DB_SSL=true
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_TOKEN=pos-porto-admin-token
+```
+
+## Instalasi Frontend
+
+```bash
+cd client
+npm install
 ```
 
 ## Environment Variable Frontend
 
-Salin `client/.env.example` menjadi `client/.env`:
-
 ```env
-VITE_API_URL=http://localhost:3000/api/transaksi
+VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
-Jika backend kamu berjalan di domain atau port lain, cukup ubah `VITE_API_URL` tanpa perlu mengubah kode React.
+Untuk deployment production, contoh:
 
-## Cara Kerja Koneksi Frontend ke Backend
+```env
+VITE_API_BASE_URL=https://your-backend-domain.up.railway.app/api
+```
 
-- Frontend memanggil endpoint dari `VITE_API_URL`
-- Saat tambah transaksi, React mengirim `POST` ke backend lalu me-refresh data dari database
-- Saat hapus transaksi, React mengirim `DELETE` ke backend lalu me-refresh data dari database
-- Saat halaman dibuka, React mengambil ulang semua transaksi dengan `GET`
+## Menjalankan Frontend
 
-Dengan alur ini, data yang tampil di frontend selalu mengikuti data terbaru yang tersimpan di PostgreSQL.
+```bash
+cd client
+npm run dev
+```
+
+## Endpoint Utama
+
+- `POST /api/auth/login`
+- `GET /api/products`
+- `GET /api/dashboard/summary`
+- `GET /api/transaksi`
+- `POST /api/transaksi`
+- `DELETE /api/transaksi/:id`
+- `GET /api/transaksi/export/excel`
+
+Semua endpoint selain login memerlukan header:
+
+```http
+Authorization: Bearer <ADMIN_TOKEN>
+```
+
+## Request Login
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
 
 ## Schema Tabel
 
@@ -147,53 +171,9 @@ CREATE TABLE IF NOT EXISTS transaksi (
 );
 ```
 
-Jika tabel `transaksi` sudah terlanjur dibuat dengan struktur berbeda, cara paling mudah di Supabase adalah:
-1. Backup data jika perlu.
-2. Drop tabel lama.
-3. Jalankan schema terbaru di atas.
+## Catatan Penggunaan
 
-## API Endpoint
-
-### 1. Tambah transaksi
-
-`POST /api/transaksi`
-
-Request body:
-
-```json
-{
-  "nama_barang": "Kopi Susu",
-  "harga": 18000,
-  "jumlah": 2,
-  "tanggal": "2026-03-20T10:00:00.000Z"
-}
-```
-
-Catatan: field `total` tidak dikirim dari frontend. Nilai `total` dihitung otomatis oleh database.
-
-### 2. Ambil semua transaksi
-
-`GET /api/transaksi`
-
-### 3. Hapus transaksi
-
-`DELETE /api/transaksi/:id`
-
-## Cara Koneksi ke Supabase PostgreSQL
-
-1. Buka project kamu di Supabase.
-2. Masuk ke menu `Project Settings` > `Database`.
-3. Ambil nilai berikut:
-   - Host
-   - Port
-   - Database name
-   - User
-   - Password
-4. Masukkan nilai tersebut ke file `.env`.
-5. Jika memakai Supabase Pooler, biasanya gunakan:
-   - `DB_HOST`: host pooler dari Supabase
-   - `DB_PORT`: `6543`
-   - `DB_SSL`: `true`
-6. Jalankan schema `sql/schema.sql` di SQL Editor Supabase.
-7. Jalankan backend dengan `npm run dev`.
-8. Jalankan frontend dengan `cd client` lalu `npm run dev`.
+- Produk preset backend disimpan di `src/constants/products.js`
+- Nilai `total` dihitung database, bukan dikirim dari frontend
+- Print struk dilakukan dari browser melalui popup print sederhana
+- Export Excel dihasilkan dari backend dan diunduh langsung dari frontend

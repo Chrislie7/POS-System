@@ -1,38 +1,92 @@
 import { useEffect, useState } from "react";
+import DashboardOverview from "./components/DashboardOverview";
+import LoginPage from "./components/LoginPage";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
-import SummaryCard from "./components/SummaryCard";
-import { createTransaction, deleteTransaction, getTransactions } from "./services/transactionService";
+import {
+  clearSession,
+  createTransaction,
+  deleteTransaction,
+  exportTransactionsExcel,
+  getDashboardSummary,
+  getProducts,
+  getSession,
+  getTransactions,
+  loginAdmin,
+  saveSession
+} from "./services/transactionService";
 
 function App() {
+  const [session, setSession] = useState(() => getSession());
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState("");
+  const [authError, setAuthError] = useState("");
 
-  async function loadTransactions() {
+  async function loadDashboard() {
     try {
       setLoading(true);
       setError("");
-      const data = await getTransactions();
-      setTransactions(data);
+      const [transactionData, productData, summaryData] = await Promise.all([
+        getTransactions(),
+        getProducts(),
+        getDashboardSummary()
+      ]);
+      setTransactions(transactionData);
+      setProducts(productData);
+      setSummary(summaryData);
     } catch (err) {
       setError(err.message);
+      if (err.message === "Akses admin dibutuhkan") {
+        clearSession();
+        setSession(null);
+      }
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadTransactions();
-  }, []);
+    if (session?.token) {
+      loadDashboard();
+    }
+  }, [session?.token]);
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const username = String(formData.get("username") || "").trim();
+    const password = String(formData.get("password") || "").trim();
+
+    if (!username || !password) {
+      setAuthError("Username dan password wajib diisi.");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      setAuthError("");
+      const result = await loginAdmin({ username, password });
+      saveSession(result);
+      setSession(result);
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  }
 
   async function handleAddTransaction(formData) {
     try {
       setSubmitting(true);
       setError("");
       await createTransaction(formData);
-      await loadTransactions();
+      await loadDashboard();
     } catch (err) {
       setError(err.message);
       throw err;
@@ -45,40 +99,110 @@ function App() {
     try {
       setError("");
       await deleteTransaction(id);
-      await loadTransactions();
+      await loadDashboard();
     } catch (err) {
       setError(err.message);
     }
   }
 
-  const grandTotal = transactions.reduce((sum, item) => sum + Number(item.total), 0);
+  async function handleExport() {
+    try {
+      setExporting(true);
+      setError("");
+      const fileBlob = await exportTransactionsExcel();
+      const url = URL.createObjectURL(fileBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `transaksi-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function handlePrint(transaction) {
+    const printWindow = window.open("", "_blank", "width=420,height=640");
+
+    if (!printWindow) {
+      setError("Popup print diblokir browser.");
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Struk ${transaction.nama_barang}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+            h1 { font-size: 20px; margin-bottom: 8px; }
+            .line { display: flex; justify-content: space-between; margin: 8px 0; }
+            .total { margin-top: 16px; padding-top: 12px; border-top: 1px dashed #999; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>POS Porto</h1>
+          <p>Struk transaksi</p>
+          <div class="line"><span>ID</span><span>${transaction.id}</span></div>
+          <div class="line"><span>Barang</span><span>${transaction.nama_barang}</span></div>
+          <div class="line"><span>Harga</span><span>Rp ${formatCurrency(transaction.harga)}</span></div>
+          <div class="line"><span>Jumlah</span><span>${transaction.jumlah}</span></div>
+          <div class="line total"><span>Total</span><span>Rp ${formatCurrency(transaction.total)}</span></div>
+          <div class="line"><span>Tanggal</span><span>${formatDate(transaction.tanggal)}</span></div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  }
+
+  function handleLogout() {
+    clearSession();
+    setSession(null);
+    setTransactions([]);
+    setProducts([]);
+    setSummary(null);
+    setError("");
+  }
+
+  if (!session?.token) {
+    return <LoginPage onLogin={handleLogin} submitting={authLoading} error={authError} />;
+  }
 
   return (
     <main className="page-shell">
-      <section className="hero-card">
-        <div>
-          <p className="eyebrow">POS Porto</p>
-          <h1>Kelola transaksi dengan cepat dan rapi.</h1>
-          <p className="hero-text">
-            Input barang, hitung total otomatis, lalu simpan ke backend Express dan PostgreSQL.
-          </p>
-        </div>
-        <SummaryCard total={grandTotal} count={transactions.length} />
-      </section>
+      <DashboardOverview summary={summary} onExport={handleExport} onLogout={handleLogout} exporting={exporting} />
 
       {error ? <div className="alert">{error}</div> : null}
 
-      <section className="content-grid">
-        <TransactionForm onSubmit={handleAddTransaction} submitting={submitting} />
+      <section className="content-grid app-grid">
+        <TransactionForm products={products} onSubmit={handleAddTransaction} submitting={submitting} />
         <TransactionList
           transactions={transactions}
           loading={loading}
           onDelete={handleDeleteTransaction}
-          grandTotal={grandTotal}
+          onPrint={handlePrint}
+          summary={summary}
         />
       </section>
     </main>
   );
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("id-ID").format(Number(value) || 0);
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
 }
 
 export default App;

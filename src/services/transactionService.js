@@ -51,6 +51,10 @@ async function getAllTransactions() {
   return transactionModel.findAll();
 }
 
+async function getDashboardSummary() {
+  return transactionModel.getDashboardSummary();
+}
+
 async function deleteTransaction(id) {
   const parsedId = Number(id);
 
@@ -72,5 +76,6 @@ async function deleteTransaction(id) {
 module.exports = {
   createTransaction,
   getAllTransactions,
+  getDashboardSummary,
   deleteTransaction
 };
