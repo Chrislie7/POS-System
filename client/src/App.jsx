@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import DashboardOverview from "./components/DashboardOverview";
+import SidebarNav from "./components/SidebarNav";
 import LoginPage from "./components/LoginPage";
+import ProductPicker from "./components/ProductPicker";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
 import {
@@ -21,9 +22,11 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [customerName, setCustomerName] = useState("");
+  const [tanggal, setTanggal] = useState(new Date().toISOString().slice(0, 16));
+  const [currentItems, setCurrentItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState("");
   const [authError, setAuthError] = useState("");
@@ -81,15 +84,79 @@ function App() {
     }
   }
 
-  async function handleAddTransaction(formData) {
+  function addOrMergeItem(item) {
+    setCurrentItems((current) => {
+      const existing = current.find((entry) => entry.nama_barang === item.nama_barang && entry.harga === item.harga);
+
+      if (existing) {
+        return current.map((entry) =>
+          entry.nama_barang === item.nama_barang && entry.harga === item.harga
+            ? { ...entry, jumlah: entry.jumlah + 1 }
+            : entry
+        );
+      }
+
+      return [...current, { ...item, jumlah: item.jumlah || 1 }];
+    });
+  }
+
+  function handleAddProduct(product) {
+    addOrMergeItem({
+      nama_barang: product.nama_barang,
+      harga: Number(product.harga),
+      jumlah: 1,
+      icon: product.icon || "coffee"
+    });
+  }
+
+  function handleAddCustom(item) {
+    addOrMergeItem({
+      nama_barang: item.nama_barang,
+      harga: Number(item.harga),
+      jumlah: 1,
+      icon: item.icon || "sparkles"
+    });
+  }
+
+  function handleUpdateQty(index, delta) {
+    setCurrentItems((current) =>
+      current
+        .map((item, itemIndex) =>
+          itemIndex === index ? { ...item, jumlah: Math.max(0, item.jumlah + delta) } : item
+        )
+        .filter((item) => item.jumlah > 0)
+    );
+  }
+
+  function handleRemoveItem(index) {
+    setCurrentItems((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function handleCreateOrder() {
+    if (!customerName.trim()) {
+      setError("Nama customer wajib diisi.");
+      return;
+    }
+
+    if (currentItems.length === 0) {
+      setError("Tambahkan item ke order terlebih dulu.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError("");
-      await createTransaction(formData);
+      await createTransaction({
+        customer_name: customerName.trim(),
+        tanggal: new Date(tanggal).toISOString(),
+        items: currentItems.map(({ nama_barang, harga, jumlah }) => ({ nama_barang, harga, jumlah }))
+      });
+      setCustomerName("");
+      setTanggal(new Date().toISOString().slice(0, 16));
+      setCurrentItems([]);
       await loadDashboard();
     } catch (err) {
       setError(err.message);
-      throw err;
     } finally {
       setSubmitting(false);
     }
@@ -107,8 +174,6 @@ function App() {
 
   async function handleExport() {
     try {
-      setExporting(true);
-      setError("");
       const fileBlob = await exportTransactionsExcel();
       const url = URL.createObjectURL(fileBlob);
       const link = document.createElement("a");
@@ -120,8 +185,6 @@ function App() {
       URL.revokeObjectURL(url);
     } catch (err) {
       setError(err.message);
-    } finally {
-      setExporting(false);
     }
   }
 
@@ -167,34 +230,40 @@ function App() {
     printWindow.print();
   }
 
-  function handleLogout() {
-    clearSession();
-    setSession(null);
-    setOrders([]);
-    setProducts([]);
-    setSummary(null);
-    setError("");
-  }
-
   if (!session?.token) {
     return <LoginPage onLogin={handleLogin} submitting={authLoading} error={authError} />;
   }
 
   return (
-    <main className="page-shell visual-page-shell">
-      <DashboardOverview summary={summary} onExport={handleExport} onLogout={handleLogout} exporting={exporting} />
+    <main className="tablet-shell">
+      <SidebarNav />
 
-      {error ? <div className="alert">{error}</div> : null}
+      <section className="tablet-main">
+        {error ? <div className="alert">{error}</div> : null}
 
-      <section className="content-grid app-grid responsive-grid">
-        <TransactionForm products={products} onSubmit={handleAddTransaction} submitting={submitting} />
-        <TransactionList
-          transactions={orders}
-          loading={loading}
-          onDelete={handleDeleteTransaction}
-          onPrint={handlePrint}
-          summary={summary}
-        />
+        <section className="tablet-top-layout">
+          <ProductPicker products={products} onAddProduct={handleAddProduct} onAddCustom={handleAddCustom} />
+          <TransactionForm
+            customerName={customerName}
+            tanggal={tanggal}
+            items={currentItems}
+            submitting={submitting}
+            onCustomerChange={setCustomerName}
+            onDateChange={setTanggal}
+            onUpdateQty={handleUpdateQty}
+            onRemoveItem={handleRemoveItem}
+            onSubmit={handleCreateOrder}
+          />
+        </section>
+
+        <div className="action-strip">
+          <button className="ghost-button icon-button" type="button" onClick={handleExport}>
+            Export Excel
+          </button>
+          <div className="summary-chip">Total sales: Rp {formatCurrency(summary?.totals?.total_penjualan)}</div>
+        </div>
+
+        <TransactionList transactions={orders} loading={loading} onDelete={handleDeleteTransaction} onPrint={handlePrint} summary={summary} />
       </section>
     </main>
   );

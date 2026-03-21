@@ -5,6 +5,7 @@ import {
   Cookie,
   CupSoda,
   FileSpreadsheet,
+  Filter,
   Flame,
   GlassWater,
   Leaf,
@@ -16,6 +17,7 @@ import {
   Plus,
   Printer,
   Receipt,
+  Search,
   ShoppingBag,
   Sparkles,
   Trash2,
@@ -45,7 +47,9 @@ const iconMap = {
   minus: Minus,
   user: User,
   lock: Lock,
-  receipt: Receipt
+  receipt: Receipt,
+  search: Search,
+  filter: Filter
 };
 
 function AppIcon({ name, size = 22, strokeWidth = 2, className = "" }) {
