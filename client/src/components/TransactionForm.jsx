@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import AppIcon from "./AppIcon";
 import ProductPicker from "./ProductPicker";
 
 function TransactionForm({ products, onSubmit, submitting }) {
@@ -38,7 +39,7 @@ function TransactionForm({ products, onSubmit, submitting }) {
       nama_barang: product.nama_barang,
       harga: Number(product.harga),
       jumlah: 1,
-      icon: product.icon || "?"
+      icon: product.icon || "coffee"
     });
   }
 
@@ -52,7 +53,7 @@ function TransactionForm({ products, onSubmit, submitting }) {
       nama_barang: customName.trim(),
       harga: Number(customPrice),
       jumlah: 1,
-      icon: "?"
+      icon: "sparkles"
     });
     setCustomName("");
     setCustomPrice("");
@@ -108,16 +109,19 @@ function TransactionForm({ products, onSubmit, submitting }) {
     <section className="panel builder-panel">
       <div className="panel-header row-between">
         <div>
-          <p className="panel-kicker">???????? Order</p>
+          <p className="panel-kicker">Order</p>
           <h2>Per orang</h2>
         </div>
-        <div className="mini-badge">{items.length} item</div>
+        <div className="mini-badge icon-badge">
+          <AppIcon name="package" size={16} />
+          <span>{items.length}</span>
+        </div>
       </div>
 
       <form className="form-grid" onSubmit={handleSubmit}>
         <div className="inline-grid two-col">
           <label className="field compact-field card-field">
-            <span>??</span>
+            <span className="field-icon"><AppIcon name="user" size={18} /></span>
             <input
               type="text"
               name="customer_name"
@@ -128,7 +132,7 @@ function TransactionForm({ products, onSubmit, submitting }) {
           </label>
 
           <label className="field compact-field card-field">
-            <span>??</span>
+            <span className="field-icon"><AppIcon name="clock" size={18} /></span>
             <input type="datetime-local" value={tanggal} onChange={(event) => setTanggal(event.target.value)} />
           </label>
         </div>
@@ -139,11 +143,11 @@ function TransactionForm({ products, onSubmit, submitting }) {
           <div className="custom-builder soft-card">
             <div className="inline-grid two-col">
               <label className="field compact-field card-field">
-                <span>?</span>
+                <span className="field-icon"><AppIcon name="sparkles" size={18} /></span>
                 <input value={customName} onChange={(event) => setCustomName(event.target.value)} placeholder="Custom item" />
               </label>
               <label className="field compact-field card-field">
-                <span>??</span>
+                <span className="field-icon"><AppIcon name="wallet" size={18} /></span>
                 <input
                   type="number"
                   min="1"
@@ -153,8 +157,9 @@ function TransactionForm({ products, onSubmit, submitting }) {
                 />
               </label>
             </div>
-            <button className="secondary-button" type="button" onClick={handleAddCustom}>
-              Tambah Custom
+            <button className="secondary-button icon-button" type="button" onClick={handleAddCustom}>
+              <AppIcon name="plus" size={16} />
+              <strong>Tambah</strong>
             </button>
           </div>
         ) : null}
@@ -163,37 +168,40 @@ function TransactionForm({ products, onSubmit, submitting }) {
           {items.length === 0 ? <p className="empty-state">Pilih produk untuk mulai order.</p> : null}
           {items.map((item, index) => (
             <div key={`${item.nama_barang}-${index}`} className="cart-item">
-              <div className="cart-icon">{item.icon || "??"}</div>
+              <div className="cart-icon icon-surface warm-surface">
+                <AppIcon name={item.icon || "coffee"} size={20} />
+              </div>
               <div className="cart-meta">
                 <strong>{item.nama_barang}</strong>
                 <span>Rp {formatCurrency(item.harga)}</span>
               </div>
               <div className="qty-box">
                 <button className="qty-button" type="button" onClick={() => updateQty(index, -1)}>
-                  -
+                  <AppIcon name="minus" size={14} />
                 </button>
                 <span>{item.jumlah}</span>
                 <button className="qty-button" type="button" onClick={() => updateQty(index, 1)}>
-                  +
+                  <AppIcon name="plus" size={14} />
                 </button>
               </div>
               <strong className="cart-total">Rp {formatCurrency(item.harga * item.jumlah)}</strong>
-              <button className="ghost-button small-button" type="button" onClick={() => removeItem(index)}>
-                ?
+              <button className="ghost-button small-button icon-only-button" type="button" onClick={() => removeItem(index)}>
+                <AppIcon name="trash" size={16} />
               </button>
             </div>
           ))}
         </div>
 
         <div className="total-box large-total">
-          <span>?? Total</span>
+          <span className="total-label"><AppIcon name="wallet" size={18} /> Total</span>
           <strong>Rp {formatCurrency(total)}</strong>
         </div>
 
         {localError ? <p className="helper-error">{localError}</p> : null}
 
-        <button className="primary-button large-button" type="submit" disabled={submitting || !products.length}>
-          {submitting ? "Menyimpan..." : "Simpan Order"}
+        <button className="primary-button large-button icon-button" type="submit" disabled={submitting || !products.length}>
+          <AppIcon name="receipt" size={18} />
+          <strong>{submitting ? "Menyimpan..." : "Simpan Order"}</strong>
         </button>
       </form>
     </section>

@@ -3,36 +3,36 @@ module.exports = [
     id: "kopi-susu",
     nama_barang: "Kopi Susu",
     harga: 18000,
-    icon: "?"
+    icon: "coffee"
   },
   {
     id: "espresso",
     nama_barang: "Espresso",
     harga: 15000,
-    icon: "?"
+    icon: "cup"
   },
   {
     id: "cappuccino",
     nama_barang: "Cappuccino",
     harga: 22000,
-    icon: "??"
+    icon: "milk"
   },
   {
     id: "matcha-latte",
     nama_barang: "Matcha Latte",
     harga: 24000,
-    icon: "??"
+    icon: "leaf"
   },
   {
     id: "mojito",
     nama_barang: "Mojito Mint",
     harga: 20000,
-    icon: "??"
+    icon: "water"
   },
   {
     id: "croissant",
-    nama_barang: "Croissant",
+    nama_barang: "Cookies",
     harga: 17000,
-    icon: "??"
+    icon: "cookie"
   }
 ];

@@ -21,8 +21,13 @@ body {
 }
 
 button,
-input {
+input,
+svg {
   font: inherit;
+}
+
+svg {
+  display: block;
 }
 
 .page-shell,
@@ -67,6 +72,8 @@ input {
   text-align: center;
 }
 
+.icon-surface,
+.tiny-icon-surface,
 .login-visual,
 .stat-icon,
 .product-art,
@@ -80,9 +87,27 @@ input {
   width: 88px;
   height: 88px;
   margin: 0 auto 16px;
-  font-size: 2.6rem;
+  color: #fff;
+}
+
+.warm-surface {
   background: linear-gradient(135deg, #f59e0b, #fb7185);
   color: #fff;
+}
+
+.cool-surface {
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  color: #fff;
+}
+
+.hot-surface {
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  color: #fff;
+}
+
+.tiny-icon-surface {
+  width: 28px;
+  height: 28px;
 }
 
 .eyebrow,
@@ -132,7 +157,9 @@ p {
 .qty-box,
 .order-head,
 .order-foot,
-.section-head {
+.section-head,
+.icon-badge,
+.total-label {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -178,8 +205,6 @@ p {
 .stat-icon {
   width: 52px;
   height: 52px;
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, #fef3c7, #fed7aa);
 }
 
 .visual-stat strong {
@@ -195,12 +220,13 @@ p {
   position: relative;
 }
 
-.compact-field span {
+.field-icon {
   position: absolute;
   top: 50%;
   left: 14px;
   transform: translateY(-50%);
   z-index: 1;
+  color: #64748b;
 }
 
 .field input {
@@ -240,12 +266,6 @@ p {
 .product-art {
   width: 56px;
   height: 56px;
-  font-size: 1.8rem;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-}
-
-.custom-card .product-art {
-  background: linear-gradient(135deg, #dbeafe, #e9d5ff);
 }
 
 .builder-panel,
@@ -282,8 +302,6 @@ p {
 .cart-icon {
   width: 48px;
   height: 48px;
-  font-size: 1.4rem;
-  background: linear-gradient(135deg, #ffe4b5, #fef3c7);
 }
 
 .cart-meta {
@@ -303,6 +321,8 @@ p {
   border-radius: 999px;
   background: #eef2ff;
   cursor: pointer;
+  display: grid;
+  place-items: center;
 }
 
 .cart-total,
@@ -379,7 +399,8 @@ p {
 .primary-button,
 .ghost-button,
 .secondary-button,
-.icon-button {
+.icon-button,
+.icon-only-button {
   border: 0;
   border-radius: 18px;
   padding: 12px 16px;
@@ -403,9 +424,11 @@ p {
   color: #075985;
 }
 
-.icon-button {
+.icon-button,
+.icon-only-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 
@@ -413,7 +436,8 @@ p {
   padding: 14px 18px;
 }
 
-.small-button {
+.small-button,
+.icon-only-button {
   padding: 10px 12px;
 }
 
@@ -421,7 +445,8 @@ p {
 .ghost-button:hover,
 .secondary-button:hover,
 .icon-button:hover,
-.product-card:hover {
+.product-card:hover,
+.qty-button:hover {
   transform: translateY(-1px);
 }
 

@@ -1,9 +1,9 @@
 function SummaryCard({ total, count }) {
   return (
     <div className="summary-card">
-      <p>Ringkasan hari ini</p>
+      <p>Ringkasan</p>
       <strong>Rp {formatCurrency(total)}</strong>
-      <span>{count} transaksi tersimpan</span>
+      <span>{count} order</span>
     </div>
   );
 }

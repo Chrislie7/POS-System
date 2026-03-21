@@ -1,3 +1,5 @@
+import AppIcon from "./AppIcon";
+
 function TransactionList({ transactions, loading, onDelete, onPrint, summary }) {
   const topProducts = summary?.topProducts || [];
   const recentOrders = summary?.recentOrders || [];
@@ -6,16 +8,21 @@ function TransactionList({ transactions, loading, onDelete, onPrint, summary }) 
     <section className="panel wide-panel order-panel">
       <div className="panel-header row-between">
         <div>
-          <p className="panel-kicker">?? Orders</p>
+          <p className="panel-kicker">Orders</p>
           <h2>Semua pesanan</h2>
         </div>
-        <div className="mini-badge">{transactions.length} order</div>
+        <div className="mini-badge icon-badge">
+          <AppIcon name="order" size={16} />
+          <span>{transactions.length}</span>
+        </div>
       </div>
 
       <div className="insight-grid mobile-stack">
         <div className="soft-card">
           <div className="section-head compact-head">
-            <h3>??</h3>
+            <div className="tiny-icon-surface hot-surface">
+              <AppIcon name="flame" size={16} />
+            </div>
             <span>Top</span>
           </div>
           <div className="mini-list">
@@ -34,7 +41,9 @@ function TransactionList({ transactions, loading, onDelete, onPrint, summary }) 
 
         <div className="soft-card">
           <div className="section-head compact-head">
-            <h3>??</h3>
+            <div className="tiny-icon-surface cool-surface">
+              <AppIcon name="clock" size={16} />
+            </div>
             <span>Baru</span>
           </div>
           <div className="mini-list">
@@ -78,11 +87,11 @@ function TransactionList({ transactions, loading, onDelete, onPrint, summary }) 
             <div className="order-foot">
               <small>{formatDate(order.tanggal)}</small>
               <div className="table-actions">
-                <button className="secondary-button small-button" type="button" onClick={() => onPrint(order)}>
-                  ???
+                <button className="secondary-button small-button icon-only-button" type="button" onClick={() => onPrint(order)}>
+                  <AppIcon name="printer" size={16} />
                 </button>
-                <button className="ghost-button small-button" type="button" onClick={() => onDelete(order.id)}>
-                  ???
+                <button className="ghost-button small-button icon-only-button" type="button" onClick={() => onDelete(order.id)}>
+                  <AppIcon name="trash" size={16} />
                 </button>
               </div>
             </div>
