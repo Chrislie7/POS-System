@@ -1,37 +1,27 @@
-function ProductPicker({ products, selectedProductId, onSelect }) {
+function ProductPicker({ products, onAddProduct, onSelectCustom }) {
   return (
-    <div className="product-picker">
-      <div className="product-picker-head">
-        <span>Pilih produk cepat</span>
-        <small>Klik produk preset, atau gunakan custom order di paling akhir.</small>
+    <section className="product-picker">
+      <div className="section-head compact-head">
+        <h3>??</h3>
+        <span>Menu</span>
       </div>
 
-      <div className="product-grid">
-        {products.map((product) => {
-          const isActive = selectedProductId === product.id;
-          return (
-            <button
-              key={product.id}
-              className={`product-chip ${isActive ? "is-active" : ""}`}
-              type="button"
-              onClick={() => onSelect(product.id)}
-            >
-              <strong>{product.nama_barang}</strong>
-              <span>Rp {formatCurrency(product.harga)}</span>
-            </button>
-          );
-        })}
+      <div className="product-grid visual-grid">
+        {products.map((product) => (
+          <button key={product.id} className="product-card" type="button" onClick={() => onAddProduct(product)}>
+            <div className="product-art">{product.icon || "?"}</div>
+            <strong>{product.nama_barang}</strong>
+            <span>Rp {formatCurrency(product.harga)}</span>
+          </button>
+        ))}
 
-        <button
-          className={`product-chip custom-chip ${selectedProductId === "custom" ? "is-active" : ""}`}
-          type="button"
-          onClick={() => onSelect("custom")}
-        >
-          <strong>Custom Order</strong>
-          <span>Input nama dan harga manual</span>
+        <button className="product-card custom-card" type="button" onClick={onSelectCustom}>
+          <div className="product-art">?</div>
+          <strong>Custom</strong>
+          <span>Tambah manual</span>
         </button>
       </div>
-    </div>
+    </section>
   );
 }
 

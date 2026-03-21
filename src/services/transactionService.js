@@ -6,39 +6,52 @@ function createValidationError(message) {
   return error;
 }
 
+function validateItems(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw createValidationError("Order harus memiliki minimal satu item");
+  }
+
+  return items.map((item) => {
+    const namaBarang = String(item.nama_barang || "").trim();
+    const harga = Number(item.harga);
+    const jumlah = Number(item.jumlah);
+
+    if (!namaBarang) {
+      throw createValidationError("Nama item tidak boleh kosong");
+    }
+
+    if (Number.isNaN(harga) || harga <= 0) {
+      throw createValidationError("Harga item harus lebih dari 0");
+    }
+
+    if (!Number.isInteger(jumlah) || jumlah <= 0) {
+      throw createValidationError("Jumlah item harus bilangan bulat lebih dari 0");
+    }
+
+    return {
+      nama_barang: namaBarang,
+      harga,
+      jumlah
+    };
+  });
+}
+
 function validatePayload(payload) {
-  const { nama_barang, harga, jumlah, tanggal } = payload;
+  const customerName = String(payload.customer_name || "").trim();
+  const tanggal = payload.tanggal ? new Date(payload.tanggal) : new Date();
 
-  if (!nama_barang || harga === undefined || jumlah === undefined || !tanggal) {
-    throw createValidationError("Field nama_barang, harga, jumlah, dan tanggal wajib diisi");
+  if (!customerName) {
+    throw createValidationError("Nama order wajib diisi");
   }
 
-  const parsedNamaBarang = String(nama_barang).trim();
-  const parsedHarga = Number(harga);
-  const parsedJumlah = Number(jumlah);
-  const parsedTanggal = new Date(tanggal);
-
-  if (!parsedNamaBarang) {
-    throw createValidationError("Field nama_barang tidak boleh kosong");
-  }
-
-  if (Number.isNaN(parsedHarga) || parsedHarga <= 0) {
-    throw createValidationError("Field harga harus berupa angka lebih dari 0");
-  }
-
-  if (!Number.isInteger(parsedJumlah) || parsedJumlah <= 0) {
-    throw createValidationError("Field jumlah harus berupa bilangan bulat lebih dari 0");
-  }
-
-  if (Number.isNaN(parsedTanggal.getTime())) {
-    throw createValidationError("Field tanggal harus berupa tanggal yang valid");
+  if (Number.isNaN(tanggal.getTime())) {
+    throw createValidationError("Tanggal order tidak valid");
   }
 
   return {
-    nama_barang: parsedNamaBarang,
-    harga: parsedHarga,
-    jumlah: parsedJumlah,
-    tanggal: parsedTanggal.toISOString()
+    customer_name: customerName,
+    tanggal: tanggal.toISOString(),
+    items: validateItems(payload.items)
   };
 }
 
@@ -65,7 +78,7 @@ async function deleteTransaction(id) {
   const deletedTransaction = await transactionModel.remove(parsedId);
 
   if (!deletedTransaction) {
-    const error = new Error("Transaksi tidak ditemukan");
+    const error = new Error("Order tidak ditemukan");
     error.statusCode = 404;
     throw error;
   }

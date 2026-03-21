@@ -18,7 +18,7 @@ import {
 
 function App() {
   const [session, setSession] = useState(() => getSession());
-  const [transactions, setTransactions] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -32,12 +32,12 @@ function App() {
     try {
       setLoading(true);
       setError("");
-      const [transactionData, productData, summaryData] = await Promise.all([
+      const [orderData, productData, summaryData] = await Promise.all([
         getTransactions(),
         getProducts(),
         getDashboardSummary()
       ]);
-      setTransactions(transactionData);
+      setOrders(orderData);
       setProducts(productData);
       setSummary(summaryData);
     } catch (err) {
@@ -113,7 +113,7 @@ function App() {
       const url = URL.createObjectURL(fileBlob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `transaksi-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.download = `orders-${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -125,34 +125,40 @@ function App() {
     }
   }
 
-  function handlePrint(transaction) {
-    const printWindow = window.open("", "_blank", "width=420,height=640");
+  function handlePrint(order) {
+    const printWindow = window.open("", "_blank", "width=420,height=720");
 
     if (!printWindow) {
       setError("Popup print diblokir browser.");
       return;
     }
 
+    const itemsHtml = order.items
+      .map(
+        (item) => `
+          <div class="line"><span>${item.nama_barang} x${item.jumlah}</span><span>Rp ${formatCurrency(item.total)}</span></div>
+        `
+      )
+      .join("");
+
     printWindow.document.write(`
       <html>
         <head>
-          <title>Struk ${transaction.nama_barang}</title>
+          <title>Struk ${order.order_code}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-            h1 { font-size: 20px; margin-bottom: 8px; }
+            h1 { font-size: 22px; margin-bottom: 8px; }
             .line { display: flex; justify-content: space-between; margin: 8px 0; }
             .total { margin-top: 16px; padding-top: 12px; border-top: 1px dashed #999; font-weight: bold; }
+            .muted { color: #666; margin-bottom: 12px; }
           </style>
         </head>
         <body>
           <h1>POS Porto</h1>
-          <p>Struk transaksi</p>
-          <div class="line"><span>ID</span><span>${transaction.id}</span></div>
-          <div class="line"><span>Barang</span><span>${transaction.nama_barang}</span></div>
-          <div class="line"><span>Harga</span><span>Rp ${formatCurrency(transaction.harga)}</span></div>
-          <div class="line"><span>Jumlah</span><span>${transaction.jumlah}</span></div>
-          <div class="line total"><span>Total</span><span>Rp ${formatCurrency(transaction.total)}</span></div>
-          <div class="line"><span>Tanggal</span><span>${formatDate(transaction.tanggal)}</span></div>
+          <p class="muted">${order.order_code} | ${order.customer_name}</p>
+          ${itemsHtml}
+          <div class="line total"><span>Total</span><span>Rp ${formatCurrency(order.total)}</span></div>
+          <div class="line"><span>Tanggal</span><span>${formatDate(order.tanggal)}</span></div>
         </body>
       </html>
     `);
@@ -164,7 +170,7 @@ function App() {
   function handleLogout() {
     clearSession();
     setSession(null);
-    setTransactions([]);
+    setOrders([]);
     setProducts([]);
     setSummary(null);
     setError("");
@@ -175,15 +181,15 @@ function App() {
   }
 
   return (
-    <main className="page-shell">
+    <main className="page-shell visual-page-shell">
       <DashboardOverview summary={summary} onExport={handleExport} onLogout={handleLogout} exporting={exporting} />
 
       {error ? <div className="alert">{error}</div> : null}
 
-      <section className="content-grid app-grid">
+      <section className="content-grid app-grid responsive-grid">
         <TransactionForm products={products} onSubmit={handleAddTransaction} submitting={submitting} />
         <TransactionList
-          transactions={transactions}
+          transactions={orders}
           loading={loading}
           onDelete={handleDeleteTransaction}
           onPrint={handlePrint}

@@ -6,7 +6,7 @@ async function createTransaction(req, res, next) {
     const transaction = await transactionService.createTransaction(req.body);
 
     res.status(201).json({
-      message: "Transaksi berhasil ditambahkan",
+      message: "Order berhasil dibuat",
       data: transaction
     });
   } catch (error) {
@@ -19,7 +19,7 @@ async function getAllTransactions(_req, res, next) {
     const transactions = await transactionService.getAllTransactions();
 
     res.json({
-      message: "Daftar transaksi berhasil diambil",
+      message: "Daftar order berhasil diambil",
       data: transactions
     });
   } catch (error) {
@@ -29,19 +29,23 @@ async function getAllTransactions(_req, res, next) {
 
 async function exportTransactions(_req, res, next) {
   try {
-    const transactions = await transactionService.getAllTransactions();
-    const rows = transactions.map((item) => ({
-      ID: item.id,
-      "Nama Barang": item.nama_barang,
-      Harga: Number(item.harga),
-      Jumlah: item.jumlah,
-      Total: Number(item.total),
-      Tanggal: item.tanggal
-    }));
+    const orders = await transactionService.getAllTransactions();
+    const rows = orders.flatMap((order) =>
+      order.items.map((item) => ({
+        "Order Code": order.order_code,
+        "Nama Order": order.customer_name,
+        Tanggal: order.tanggal,
+        Item: item.nama_barang,
+        Harga: Number(item.harga),
+        Jumlah: item.jumlah,
+        "Total Item": Number(item.total),
+        "Total Order": Number(order.total)
+      }))
+    );
 
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Transaksi");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
 
     const buffer = XLSX.write(workbook, {
       type: "buffer",
@@ -50,7 +54,7 @@ async function exportTransactions(_req, res, next) {
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="transaksi-${new Date().toISOString().slice(0, 10)}.xlsx"`
+      `attachment; filename="orders-${new Date().toISOString().slice(0, 10)}.xlsx"`
     );
     res.setHeader(
       "Content-Type",
@@ -68,7 +72,7 @@ async function deleteTransaction(req, res, next) {
     const deletedTransaction = await transactionService.deleteTransaction(req.params.id);
 
     res.json({
-      message: "Transaksi berhasil dihapus",
+      message: "Order berhasil dihapus",
       data: deletedTransaction
     });
   } catch (error) {

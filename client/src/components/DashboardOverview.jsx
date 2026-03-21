@@ -2,46 +2,42 @@ function DashboardOverview({ summary, onExport, onLogout, exporting }) {
   const totals = summary?.totals || {};
   const today = summary?.today || {};
 
+  const cards = [
+    { icon: "??", value: `Rp ${formatCurrency(totals.total_penjualan)}`, label: "Total" },
+    { icon: "??", value: totals.total_order || 0, label: "Order" },
+    { icon: "??", value: totals.total_item || 0, label: "Item" },
+    { icon: "??", value: `Rp ${formatCurrency(today.penjualan_hari_ini)}`, label: "Hari ini" }
+  ];
+
   return (
     <section className="dashboard-shell">
-      <div className="dashboard-head panel">
+      <div className="dashboard-head panel icon-first-head">
         <div>
           <p className="eyebrow">POS Porto</p>
-          <h1>Dashboard ringkasan penjualan</h1>
-          <p className="hero-text">Pantau transaksi, pilih produk preset, export Excel, dan print struk dari satu layar.</p>
+          <h1>Kasir Visual</h1>
+          <p className="hero-text">Klik produk. Susun order. Cetak struk.</p>
         </div>
 
         <div className="top-actions">
-          <button className="ghost-button" type="button" onClick={onExport} disabled={exporting}>
-            {exporting ? "Menyiapkan Excel..." : "Export Excel"}
+          <button className="ghost-button icon-button" type="button" onClick={onExport} disabled={exporting}>
+            <span>??</span>
+            <strong>{exporting ? "Export..." : "Excel"}</strong>
           </button>
-          <button className="secondary-button" type="button" onClick={onLogout}>
-            Logout
+          <button className="secondary-button icon-button" type="button" onClick={onLogout}>
+            <span>??</span>
+            <strong>Keluar</strong>
           </button>
         </div>
       </div>
 
       <div className="stats-grid">
-        <article className="stat-card dark-card">
-          <span>Total penjualan</span>
-          <strong>Rp {formatCurrency(totals.total_penjualan)}</strong>
-          <small>{totals.total_transaksi || 0} transaksi tersimpan</small>
-        </article>
-        <article className="stat-card">
-          <span>Penjualan hari ini</span>
-          <strong>Rp {formatCurrency(today.penjualan_hari_ini)}</strong>
-          <small>{today.transaksi_hari_ini || 0} transaksi hari ini</small>
-        </article>
-        <article className="stat-card">
-          <span>Total item terjual</span>
-          <strong>{formatCurrency(totals.total_item || 0)}</strong>
-          <small>Akumulasi semua item</small>
-        </article>
-        <article className="stat-card">
-          <span>Rata-rata transaksi</span>
-          <strong>Rp {formatCurrency(totals.rata_rata_transaksi)}</strong>
-          <small>Tiket rata-rata penjualan</small>
-        </article>
+        {cards.map((card) => (
+          <article key={card.label} className="stat-card visual-stat">
+            <div className="stat-icon">{card.icon}</div>
+            <strong>{card.value}</strong>
+            <span>{card.label}</span>
+          </article>
+        ))}
       </div>
     </section>
   );
